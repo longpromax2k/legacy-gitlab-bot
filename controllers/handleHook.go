@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/tatsuxyz/GitLabHook/lib"
+	lib "github.com/tatsuxyz/GitLabHook/library"
 	"github.com/tatsuxyz/GitLabHook/model"
 )
 
