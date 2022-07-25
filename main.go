@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/joho/godotenv"
-	"github.com/tatsuxyz/GitLabHook/controllers"
+	"github.com/tatsuxyz/GitLabHook/routes"
 )
 
 func main() {
@@ -17,7 +17,7 @@ func main() {
 	}
 
 	// Handle request and endpoints
-	http.HandleFunc("/webhook", controllers.HandleWebHook)
+	routes.Routes()
 
 	// Serve
 	fmt.Println("[GitLabHook] Listening to port " + os.Getenv("PORT"))
