@@ -27,8 +27,18 @@ func SendTelegramMessage(pay mdl.ObjectKind, body []byte) {
 	case "merge_request":
 		var p webhook.MergeRequestEventsLoad
 		err = json.Unmarshal(body, &p)
-		dt = fmt.Sprintf(mdl.MergeRequestEventsMsg, p.User.Username, p.ObjectAttributes.TargetBranch, p.User.Username, p.Project.Name, p.Project.Homepage)
+		dt = fmt.Sprintf(mdl.MergeRequestEventsMsg, p.User.Username, p.ObjectAttributes.SourceBranch, p.User.Username, p.Project.Name, p.Project.Homepage)
 		url, text = p.ObjectAttributes.URL, "Open Request"
+	case "pipeline":
+		var p webhook.PipelineEventsLoad
+		err = json.Unmarshal(body, &p)
+		dt = fmt.Sprintf(mdl.PipelineEventsMsg, p.User.Username, p.ObjectAttributes.Ref, p.User.Username, p.Project.Name, p.Project.DefaultBranch, p.ObjectAttributes.Status)
+		url, text = p.Project.WebURL, "Open Request"
+	case "deployment":
+		var p webhook.DeploymentEventsLoad
+		err = json.Unmarshal(body, &p)
+		dt = fmt.Sprintf(mdl.DeployEventsMesg, p.User.Username, p.Project.DefaultBranch, p.User.Username, p.Project.Name, p.Project.Homepage, p.Status)
+		url, text = p.Project.WebURL, "Open Deloyment"
 	default:
 		log.Fatalf("Invalid Event\n")
 		return
