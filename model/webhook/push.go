@@ -1,4 +1,4 @@
-package model
+package webhook
 
 import "time"
 
