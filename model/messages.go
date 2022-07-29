@@ -2,6 +2,7 @@ package model
 
 var (
 	PushEventMsg          = "*%s* pushed to branch *%s* in [%s/%s](%s) \n*commit*: `%s`"
+  IssueEventMsg         = "Issue [#%d %s](%s) opened by [%s](gitlab.com/%s). \n> *%s*\n> %s"
 	MergeRequestEventsMsg = "*%s* created in branch *%s* in [%s/%s](%s) \n* a merge request*"
 	PipelineEventsMsg     = "*%s* pipeline in branch *%s* in [%s/%s](%s) \n* %s*"
 	DeployEventsMsg       = "*%s* deploy production in branch *%s* in [%s/%s](%s) \n* %s*"
