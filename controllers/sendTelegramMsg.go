@@ -24,6 +24,11 @@ func SendTelegramMessage(pay mdl.ObjectKind, body []byte) {
 		err = json.Unmarshal(body, &p)
 		dt = fmt.Sprintf(mdl.PushEventMsg, p.UserUsername, p.Ref, p.UserUsername, p.Project.Name, p.Project.Homepage, p.Commits[0].Message)
 		url, text = p.Commits[0].URL, "Open Commit"
+	case "merge_request":
+		var p webhook.MergeRequestEventsLoad
+		err = json.Unmarshal(body, &p)
+		dt = fmt.Sprintf(mdl.MergeRequestEventsMsg, p.User.Username, p.ObjectAttributes.TargetBranch, p.User.Username, p.Project.Name, p.Project.Homepage)
+		url, text = p.ObjectAttributes.URL, "Open Request"
 	default:
 		log.Fatalf("Invalid Event\n")
 		return
