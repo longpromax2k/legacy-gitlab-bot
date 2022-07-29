@@ -37,8 +37,23 @@ func SendTelegramMessage(pay mdl.ObjectKind, body []byte) {
 	case "deployment":
 		var p webhook.DeploymentEventsLoad
 		err = json.Unmarshal(body, &p)
-		dt = fmt.Sprintf(mdl.DeployEventsMesg, p.User.Username, p.Project.DefaultBranch, p.User.Username, p.Project.Name, p.Project.Homepage, p.Status)
+		dt = fmt.Sprintf(mdl.DeployEventsMsg, p.User.Username, p.Project.DefaultBranch, p.User.Username, p.Project.Name, p.Project.Homepage, p.Status)
 		url, text = p.Project.WebURL, "Open Deloyment"
+	case "release":
+		var p webhook.ReleaseEventsLoad
+		err = json.Unmarshal(body, &p)
+		dt = fmt.Sprintf(mdl.ReleaseEventsMsg, p.Commit.Author.Name, p.Project.DefaultBranch, p.Commit.Author.Name, p.Project.Name, p.Project.Homepage, p.Commit.Message)
+		url, text = p.Project.WebURL, "Open Release Event"
+	case "wiki_page":
+		var p webhook.WikipageEventsLoad
+		err = json.Unmarshal(body, &p)
+		dt = fmt.Sprintf(mdl.WikipageEventsMsg, p.User.Username, p.ObjectAttributes.Title)
+		url, text = p.ObjectAttributes.URL, "Open WikiPage"
+	case "tag_push":
+		var p webhook.TagEventsLoad
+		err = json.Unmarshal(body, &p)
+		dt = fmt.Sprintf(mdl.TagEventsMsg, p.UserName, p.Ref)
+		url, text = p.Project.WebURL, "Open WikiTag"
 	default:
 		log.Fatalf("Invalid Event\n")
 		return
