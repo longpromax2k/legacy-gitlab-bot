@@ -1,8 +1,8 @@
-package model
+package webhook
 
 import "time"
 
-type Gitlab struct {
+type PushEventPayload struct {
 	ObjectKind   string      `json:"object_kind"`
 	EventName    string      `json:"event_name"`
 	Before       string      `json:"before"`
