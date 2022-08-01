@@ -13,4 +13,5 @@ var (
 	CmtIssueMsg           = "*%s* commented on the issue [#%d %s](%s).\n> %s"
 	CmtMergeMsg           = "*%s* commented on the merge request [%s](%s).\n> %s"
 	CmtSnippetMsg         = "*%s* commented on the code snippet [#%s](%s).\n> %s"
+	JobsEvent             = "%s in %s was %s."
 )

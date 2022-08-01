@@ -87,14 +87,17 @@ func SendTelegramMessage(pay mdl.ObjectKind, body []byte) {
 		err = json.Unmarshal(body, &p)
 		dt = fmt.Sprintf(mdl.TagEventsMsg, p.UserName, p.Ref)
 		url, text = p.Project.WebURL, "Open WikiTag"
+	case "build":
+		var p webhook.JobsEvent
+		err = json.Unmarshal(body, &p)
+		dt = fmt.Sprintf(mdl.JobsEvent, p.BuildName, p.Ref, p.BuildStatus)
+		url, text = p.Repository.Homepage, "Open Repository"
 	default:
 		log.Fatalf("Invalid Event\n")
-		return
 	}
 
 	if err != nil {
-		log.Fatalf("Json unmarshal error, %v\n", err)
-		return
+		log.Fatalf("Json unmarshal error: , %v\n", err)
 	}
 
 	msg := tgbot.NewMessage(chatId, dt)
