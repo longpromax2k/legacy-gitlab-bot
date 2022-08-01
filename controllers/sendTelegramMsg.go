@@ -92,6 +92,18 @@ func SendTelegramMessage(pay mdl.ObjectKind, body []byte) {
 		err = json.Unmarshal(body, &p)
 		dt = fmt.Sprintf(mdl.JobsEvent, p.BuildName, p.Ref, p.BuildStatus)
 		url, text = p.Repository.Homepage, "Open Repository"
+	case "feature_flag":
+		var p webhook.FeatureFlag
+		err = json.Unmarshal(body, &p)
+		var s string
+		if p.ObjectAttributes.Active {
+			s = "active"
+		} else {
+			s = "unactive"
+		}
+		dt = fmt.Sprintf(mdl.FeatFlagMsg, p.ObjectAttributes.Name, s)
+		url, text = p.Project.Homepage, "Open Project"
+		log.Printf("%v %v", dt, p.Project.URL)
 	default:
 		log.Fatalf("Invalid Event\n")
 	}
