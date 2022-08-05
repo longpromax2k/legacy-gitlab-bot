@@ -4,17 +4,17 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"os"
 	"strconv"
 
 	tgbot "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	h "github.com/tatsuxyz/GitLabHook/helpers"
 	mdl "github.com/tatsuxyz/GitLabHook/model"
 	webhook "github.com/tatsuxyz/GitLabHook/model/webhook"
 	cmt "github.com/tatsuxyz/GitLabHook/model/webhook/comment"
 )
 
-func SendTelegramMessage(pay mdl.ObjectKind, body []byte) {
-	cid, _ := strconv.Atoi(os.Getenv("CHAT_ID"))
+func SendTelegramMessage(pay mdl.ObjectKind, body []byte, cId string) {
+	cid, _ := strconv.Atoi(cId)
 	var chatId = int64(cid)
 	var dt, url, text string
 	var err error
@@ -124,5 +124,5 @@ func SendTelegramMessage(pay mdl.ObjectKind, body []byte) {
 			},
 		},
 	}
-	Bot.Send(msg)
+	h.Bot.Send(msg)
 }

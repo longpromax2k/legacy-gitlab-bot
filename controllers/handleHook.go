@@ -1,45 +1,57 @@
 package controllers
 
 import (
+	"context"
 	"encoding/json"
 	"io/ioutil"
 	"log"
 	"net/http"
-	"os"
 
-	tgbot "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/go-chi/chi/v5"
+	h "github.com/tatsuxyz/GitLabHook/helpers"
 	mdl "github.com/tatsuxyz/GitLabHook/model"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
-var (
-	Bot *tgbot.BotAPI
-)
+type MongoDocument struct {
+	ChatId string `json:"chatId"`
+}
 
-func HandleWebHook(w http.ResponseWriter, r *http.Request) {
-	// Only allow POST request
-	if r.Method != "POST" {
-		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+func HandleHook(w http.ResponseWriter, r *http.Request) {
+	urlId := chi.URLParam(r, "id")
+
+	var result bson.M
+	id, err := primitive.ObjectIDFromHex(urlId)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	err = h.Col.FindOne(context.TODO(), bson.D{{Key: "_id", Value: id}}).Decode(&result)
+	if err == mongo.ErrNoDocuments {
+		log.Printf("No document was found with the id %s\n", urlId)
+		w.WriteHeader(404)
 		return
 	}
-
-	// Check request body
-	body, _ := ioutil.ReadAll(r.Body)
-	token := r.Header.Get("X-GitLab-Token")
-	if token != os.Getenv("SECRET_TOKEN") {
-		log.Print("Secret token mismatch")
+	if err != nil {
+		w.WriteHeader(500)
+		log.Panic(err)
 	}
 
+	var d MongoDocument
+	bb, _ := bson.Marshal(result)
+	bson.Unmarshal(bb, &d)
+
+	log.Printf("%s\n", d.ChatId)
+
+	body, _ := ioutil.ReadAll(r.Body)
 	// Check object kind and send message
 	var pay mdl.ObjectKind
 	json.Unmarshal(body, &pay)
-	SendTelegramMessage(pay, body)
+	SendTelegramMessage(pay, body, d.ChatId)
+}
 
-	// Serve response
-	w.Header().Set("Content-Type", "application/json")
-	data := struct {
-		Message string `json:"message"`
-	}{
-		Message: "ok",
-	}
-	json.NewEncoder(w).Encode(data)
+func HandleWebHook(w http.ResponseWriter, r *http.Request) {
+
 }
