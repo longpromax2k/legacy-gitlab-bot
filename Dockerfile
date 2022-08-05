@@ -13,9 +13,3 @@ RUN go build -o /gitlabhook
 EXPOSE 8080
 
 CMD [ "/gitlabhook" ]
-
-
-
-
-
-EXPOSE 8080
