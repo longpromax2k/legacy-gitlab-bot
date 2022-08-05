@@ -16,3 +16,8 @@ var (
 	JobsEvent             = "%s in %s was %s."
 	FeatFlagMsg           = "%s is %s."
 )
+
+var (
+	ChatExistMsg  = "Your chat is already added! Check the Webhook URL above to setup the notification."
+	ChatInsertMsg = "Hi there! To setup notifications *for this chat* with your GitLab repository, open Settings/Webhooks and add this URL:\n`https://%s/wh/%s`"
+)
