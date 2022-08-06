@@ -2,13 +2,12 @@ FROM golang:1.18.5-bullseye
 
 WORKDIR /app
 
-COPY go.mod ./
-COPY go.sum ./
+COPY go.* ./
 RUN go mod download
 
-COPY *.go ./
+COPY . ./
 
-RUN go build -o /gitlabhook
+RUN go build -v -o /gitlabhook
 
 EXPOSE 8080
 

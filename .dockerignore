@@ -1,7 +1,6 @@
 tmp/
 .air.toml
 .gitignore
-.env
 .git
 
 README.md
