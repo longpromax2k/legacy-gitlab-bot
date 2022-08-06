@@ -27,7 +27,7 @@ func main() {
 	go func() {
 		port := os.Getenv("PORT")
 		log.Printf("Listening to port %s.\n", port)
-		http.ListenAndServe("localhost:"+port, r.R)
+		http.ListenAndServe(":"+port, r.R)
 	}()
 	c.HandleCommand()
 }
