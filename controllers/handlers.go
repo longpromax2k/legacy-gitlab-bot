@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"strings"
@@ -27,7 +27,7 @@ func HandleHook(w http.ResponseWriter, r *http.Request) {
 
 		if v != nil {
 			if string(v[:]) == token {
-				body, _ := ioutil.ReadAll(r.Body)
+				body, _ := io.ReadAll(r.Body)
 				var pay model.ObjectKind
 				json.Unmarshal(body, &pay)
 				lib.SendTelegramMessage(pay, body, chatId)
