@@ -4,16 +4,17 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"os"
 	"strconv"
 
 	tgbot "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	h "github.com/tatsuxyz/GitLabHook/helpers"
 	mdl "github.com/tatsuxyz/GitLabHook/model"
 	webhook "github.com/tatsuxyz/GitLabHook/model/webhook"
+	cmt "github.com/tatsuxyz/GitLabHook/model/webhook/comment"
 )
 
-func SendTelegramMessage(pay mdl.ObjectKind, body []byte) {
-	cid, _ := strconv.Atoi(os.Getenv("CHAT_ID"))
+func SendTelegramMessage(pay mdl.ObjectKind, body []byte, cId string) {
+	cid, _ := strconv.Atoi(cId)
 	var chatId = int64(cid)
 	var dt, url, text string
 	var err error
@@ -29,6 +30,33 @@ func SendTelegramMessage(pay mdl.ObjectKind, body []byte) {
 		err = json.Unmarshal(body, &p)
 		dt = fmt.Sprintf(mdl.IssueEventMsg, p.ObjectAttributes.Iid, p.ObjectAttributes.Title, p.ObjectAttributes.URL, p.User.Name, p.User.Username, p.ObjectAttributes.Title, p.ObjectAttributes.Description)
 		url, text = p.ObjectAttributes.URL, "Open Issue"
+	case "note":
+		var nType cmt.NoteableType
+		err = json.Unmarshal(body, &nType)
+		switch nType.ObjectAttributes.NoteableType {
+		case "Commit":
+			var p cmt.Commit
+			err = json.Unmarshal(body, &p)
+			dt = fmt.Sprintf(mdl.CmtCommitMsg, p.Commit.Author.Name, p.Commit.ID, p.Commit.URL, p.ObjectAttributes.Note)
+			url, text = p.Commit.URL, "Open Commit"
+		case "Issue":
+			var p cmt.Issues
+			err = json.Unmarshal(body, &p)
+			dt = fmt.Sprintf(mdl.CmtIssueMsg, p.User.Name, p.Issue.Iid, p.Issue.Title, p.ObjectAttributes.URL, p.ObjectAttributes.Note)
+			url, text = p.ObjectAttributes.URL, "Open Issue"
+		case "MergeRequest":
+			var p cmt.MergeRequest
+			err = json.Unmarshal(body, &p)
+			dt = fmt.Sprintf(mdl.CmtMergeMsg, p.User.Name, p.MergeRequest.Title, p.ObjectAttributes.URL, p.ObjectAttributes.Note)
+			url, text = p.ObjectAttributes.URL, "Open Merge Request"
+		case "Snippet":
+			var p cmt.CodeSnippet
+			err = json.Unmarshal(body, &p)
+			dt = fmt.Sprintf(mdl.CmtSnippetMsg, p.User.Name, p.ObjectAttributes.ID, p.ObjectAttributes.URL, p.ObjectAttributes.Note)
+			url, text = p.ObjectAttributes.URL, "Open Code Snippet"
+		default:
+			log.Fatalf("Invalid NoteableType.\n")
+		}
 	case "merge_request":
 		var p webhook.MergeRequestEventsLoad
 		err = json.Unmarshal(body, &p)
@@ -59,14 +87,29 @@ func SendTelegramMessage(pay mdl.ObjectKind, body []byte) {
 		err = json.Unmarshal(body, &p)
 		dt = fmt.Sprintf(mdl.TagEventsMsg, p.UserName, p.Ref)
 		url, text = p.Project.WebURL, "Open WikiTag"
+	case "build":
+		var p webhook.JobsEvent
+		err = json.Unmarshal(body, &p)
+		dt = fmt.Sprintf(mdl.JobsEvent, p.BuildName, p.Ref, p.BuildStatus)
+		url, text = p.Repository.Homepage, "Open Repository"
+	case "feature_flag":
+		var p webhook.FeatureFlag
+		err = json.Unmarshal(body, &p)
+		var s string
+		if p.ObjectAttributes.Active {
+			s = "active"
+		} else {
+			s = "unactive"
+		}
+		dt = fmt.Sprintf(mdl.FeatFlagMsg, p.ObjectAttributes.Name, s)
+		url, text = p.Project.Homepage, "Open Project"
+		log.Printf("%v %v", dt, p.Project.URL)
 	default:
 		log.Fatalf("Invalid Event\n")
-		return
 	}
 
 	if err != nil {
-		log.Fatalf("Json unmarshal error, %v\n", err)
-		return
+		log.Fatalf("Json unmarshal error: , %v\n", err)
 	}
 
 	msg := tgbot.NewMessage(chatId, dt)
@@ -81,5 +124,5 @@ func SendTelegramMessage(pay mdl.ObjectKind, body []byte) {
 			},
 		},
 	}
-	Bot.Send(msg)
+	h.Bot.Send(msg)
 }
