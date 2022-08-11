@@ -1,50 +1,76 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"os"
-	"time"
-	"context"
 	"os/signal"
+	"sync"
 	"syscall"
 
 	c "github.com/tatsuxyz/GitLabHook/controllers"
 	r "github.com/tatsuxyz/GitLabHook/routes"
 )
 
+// Our custom handler that holds a wait group used to block the shutdown
+// while it's running the jobs.
+type CustomHandler struct {
+	wg *sync.WaitGroup
+}
+
+func NewCustomerHandler(wg *sync.WaitGroup) *CustomHandler {
+	return &CustomHandler{wg: wg}
+}
 func main() {
 
-	timeWait := 15 * time.Second
-	signChan := make(chan os.Signal, 1)
+	wg := &sync.WaitGroup{}
+	//customHandler :=NewCustomerHandler(wg)
+
 	// Handle request and endpoints
 	r.HandleRoute()
+
+	port := os.Getenv("PORT")
+	log.Printf("Listening to port %s.\n", port)
+
+	httpServer := &http.Server{
+		Addr:    ":" + port,
+		Handler: r.R,
+	}
+	// Handle sigterm and await termChan signal
+	termChan := make(chan os.Signal)
+	signal.Notify(termChan, syscall.SIGTERM, syscall.SIGINT)
+
+	go func() {
+		<-termChan // Blocks here until interrupted
+		log.Print("SIGTERM received. Shutdown process initiated\n")
+		httpServer.Shutdown(context.Background())
+	}()
 
 	// Disconnect database at the end of the program
 	defer c.Db.Close()
 
 	// Serve
-	go func() {
-		port := os.Getenv("PORT")
-		log.Printf("Listening to port %s.\n", port)
-		http.ListenAndServe(":"+port, r.R)
-	}()
-  	
-	c.HandleCommand()
-
-	// Set up a channel to hear system signal
-	signal.Notify( signChan, os.Interrupt, syscall.SIGTERM) <-signChan
-	lo.Printf("Shutting down")
-	//Set up Timeout
-	ctx, cancel := context.WithTimeout(context.Background(), timeWait)
-	defer func(){
-		log.Printf("Close another connection")
-		cancel()
-	}()
-	log.Printf( "Stop http server")
-	if err := http.Shutdown(ctx): err == context.DeadlineExceeded {
-		log.Printf("Halted active connections")
+	// port := os.Getenv("PORT")
+	// log.Printf("Listening to port %s.\n", port)
+	if err := httpServer.ListenAndServe(); err != nil {
+		if err.Error() != "http: Server closed" {
+			log.Printf("HTTP server closed with: %v\n", err)
+		}
+		log.Printf("HTTP server shut down")
+		//os.Exit(0)
 	}
-	close(signChan)
-	log.Print("Completed")
+	go func() {
+
+		http.ListenAndServe(":"+port, r.R)
+
+	}()
+
+	// This is where, once we're closing the program, we wait for all
+	// jobs (they all have been added to this WaitGroup) to `wg.Done()`.
+	log.Println("waiting for running jobs to finish")
+	wg.Wait()
+	c.HandleCommand()
+	log.Println("jobs finished. exiting")
+
 }
