@@ -1,14 +1,14 @@
-FROM golang:1.18.5-bullseye
+FROM golang:1.18 as build
 
-WORKDIR /app
+WORKDIR /go/src/app
+COPY . .
 
-COPY go.* ./
 RUN go mod download
+RUN CGO_ENABLED=0 go build -o /go/bin/app
 
-COPY . ./
-
-RUN go build -v -o /gitlabhook
+FROM gcr.io/distroless/static-debian11
+COPY --from=build /go/bin/app /
 
 EXPOSE 8080
 
-CMD [ "/gitlabhook" ]
+CMD [ "/app" ]
