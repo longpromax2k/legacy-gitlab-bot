@@ -22,3 +22,15 @@ cp .env.sample .env
 ```
 
 Edit `.env` to fit your configuration and run the program.
+
+## How to use
+```
+Add gitlab_bot by your token Bot
+Type #start to generate a URL Webhook
+Type #drop to stop receiving notifications
+Copy & Paste the URL Webhook to /Gitlab/Settings/Webhooks
+```
+## Database
+Using Bbolt.db
+
+
