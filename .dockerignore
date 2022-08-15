@@ -4,3 +4,4 @@ tmp/
 .git
 
 README.md
+.env
