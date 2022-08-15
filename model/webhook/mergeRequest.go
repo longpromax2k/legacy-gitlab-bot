@@ -36,16 +36,16 @@ type MergeRequestEventsLoad struct {
 		Homepage    string `json:"homepage"`
 	} `json:"repository"`
 	ObjectAttributes struct {
-		ID                          int         `json:"id"`
-		Iid                         int         `json:"iid"`
-		TargetBranch                string      `json:"target_branch"`
-		SourceBranch                string      `json:"source_branch"`
-		SourceProjectID             int         `json:"source_project_id"`
-		AuthorID                    int         `json:"author_id"`
-		AssigneeID                  int         `json:"assignee_id"`
-		Title                       string      `json:"title"`
-		CreatedAt                   time.Time   `json:"created_at"`
-		UpdatedAt                   time.Time   `json:"updated_at"`
+		ID              int    `json:"id"`
+		Iid             int    `json:"iid"`
+		TargetBranch    string `json:"target_branch"`
+		SourceBranch    string `json:"source_branch"`
+		SourceProjectID int    `json:"source_project_id"`
+		AuthorID        int    `json:"author_id"`
+		AssigneeID      int    `json:"assignee_id"`
+		Title           string `json:"title"`
+		// CreatedAt                   time.Time   `json:"created_at"`
+		// UpdatedAt                   time.Time   `json:"updated_at"`
 		MilestoneID                 interface{} `json:"milestone_id"`
 		State                       string      `json:"state"`
 		BlockingDiscussionsResolved bool        `json:"blocking_discussions_resolved"`

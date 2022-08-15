@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 
 	tgbot "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	h "github.com/tatsuxyz/GitLabHook/helpers"
@@ -47,8 +48,12 @@ func SendTelegramMessage(pay mdl.ObjectKind, body []byte, cId string) {
 		case "MergeRequest":
 			var p cmt.MergeRequest
 			err = json.Unmarshal(body, &p)
-			dt = fmt.Sprintf(mdl.CmtMergeMsg, p.User.Name, p.MergeRequest.Title, p.ObjectAttributes.URL, p.ObjectAttributes.Note)
-			url, text = p.ObjectAttributes.URL, "Open Merge Request"
+			statusMR := strings.Split(p.MergeRequest.Title, ":")
+			draftMR := statusMR[0]
+			if draftMR != "Draft" {
+				dt = fmt.Sprintf(mdl.CmtMergeMsg, p.User.Name, p.MergeRequest.Title, p.ObjectAttributes.URL, p.ObjectAttributes.Note)
+				url, text = p.ObjectAttributes.URL, "Open Merge Request"
+			}
 		case "Snippet":
 			var p cmt.CodeSnippet
 			err = json.Unmarshal(body, &p)
