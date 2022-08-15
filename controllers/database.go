@@ -13,7 +13,7 @@ var (
 )
 
 func init() {
-	Db, err = bbolt.Open("./tmp/data.db", 0600, nil)
+	Db, err = bbolt.Open("./data.db", 0600, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
