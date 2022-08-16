@@ -67,7 +67,8 @@ func SendTelegramMessage(pay mdl.ObjectKind, body []byte, cId string) {
 		err = json.Unmarshal(body, &p)
 		statusMR := strings.Split(p.ObjectAttributes.Title, ":")
 		draftMR := statusMR[0]
-		if p.Changes.Labels.Current[0].Title != p.Changes.Labels.Previous[0].Title {
+
+		if p.Changes.Title.Current != p.Changes.Title.Previous {
 			if draftMR != "Draft" {
 				dt = fmt.Sprintf(mdl.StatusReadyMrMsg, p.ObjectAttributes.Title)
 				url, text = p.ObjectAttributes.URL, "Open Request"
@@ -75,7 +76,6 @@ func SendTelegramMessage(pay mdl.ObjectKind, body []byte, cId string) {
 				dt = fmt.Sprintf(mdl.StatusDraftMrMsg, p.ObjectAttributes.Title)
 				url, text = p.ObjectAttributes.URL, "Open Request"
 			}
-
 		} else {
 			if draftMR != "Draft" {
 				dt = fmt.Sprintf(mdl.MergeRequestEventsMsg, p.User.Username, p.ObjectAttributes.SourceBranch, p.User.Username, p.Project.Name, p.Project.Homepage)
