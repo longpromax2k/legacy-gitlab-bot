@@ -65,8 +65,23 @@ func SendTelegramMessage(pay mdl.ObjectKind, body []byte, cId string) {
 	case "merge_request":
 		var p webhook.MergeRequestEventsLoad
 		err = json.Unmarshal(body, &p)
-		dt = fmt.Sprintf(mdl.MergeRequestEventsMsg, p.User.Username, p.ObjectAttributes.SourceBranch, p.User.Username, p.Project.Name, p.Project.Homepage)
-		url, text = p.ObjectAttributes.URL, "Open Request"
+		statusMR := strings.Split(p.ObjectAttributes.Title, ":")
+		draftMR := statusMR[0]
+		if p.Changes.Labels.Current[0].Title != p.Changes.Labels.Previous[0].Title {
+			if draftMR != "Draft" {
+				dt = fmt.Sprintf(mdl.StatusReadyMrMsg, p.ObjectAttributes.Title)
+				url, text = p.ObjectAttributes.URL, "Open Request"
+			} else {
+				dt = fmt.Sprintf(mdl.StatusDraftMrMsg, p.ObjectAttributes.Title)
+				url, text = p.ObjectAttributes.URL, "Open Request"
+			}
+
+		} else {
+			if draftMR != "Draft" {
+				dt = fmt.Sprintf(mdl.MergeRequestEventsMsg, p.User.Username, p.ObjectAttributes.SourceBranch, p.User.Username, p.Project.Name, p.Project.Homepage)
+				url, text = p.ObjectAttributes.URL, "Open Request"
+			}
+		}
 	case "pipeline":
 		var p webhook.PipelineEventsLoad
 		err = json.Unmarshal(body, &p)

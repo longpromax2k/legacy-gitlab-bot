@@ -15,6 +15,8 @@ var (
 	CmtSnippetMsg         = "*%s* commented on the code snippet [#%s](%s).\n> %s"
 	JobsEvent             = "%s in %s was %s."
 	FeatFlagMsg           = "%s is %s."
+	StatusDraftMrMsg      = "Merge Request is marked as Draft  %s"
+	StatusReadyMrMsg      = "Merge Request is marked as Ready  %s "
 )
 
 var (
