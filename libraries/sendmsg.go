@@ -123,7 +123,6 @@ func SendTelegramMessage(pay mdl.ObjectKind, body []byte, cId string) {
 		}
 		dt = fmt.Sprintf(mdl.FeatFlagMsg, p.ObjectAttributes.Name, s)
 		url, text = p.Project.Homepage, "Open Project"
-		log.Printf("%v %v", dt, p.Project.URL)
 	default:
 		log.Fatalf("Invalid Event\n")
 	}
