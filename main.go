@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 
@@ -15,12 +16,13 @@ import (
 
 func main() {
 	port := os.Getenv("PORT")
+	var wg sync.WaitGroup
+	wg.Add(1)
 
 	// Handle request and endpoints
 	r.HandleRoute()
-	// Disconnect database at the end of the program
-	defer c.Db.Close()
 
+	// server config
 	srv := &http.Server{
 		Addr:    ":" + port,
 		Handler: r.R,
@@ -29,15 +31,14 @@ func main() {
 	// Listening to interrupt signal
 	idleConnsClosed := make(chan struct{})
 	go func() {
+		defer wg.Done()
 		sigint := make(chan os.Signal, 1)
 		signal.Notify(sigint, os.Interrupt)
 		signal.Notify(sigint, syscall.SIGTERM)
 		<-sigint
 
-		log.Println("service interrupt received")
-
-		log.Println("http server shutting down")
-		time.Sleep(5 * time.Second)
+		log.Printf("service interrupt received\n")
+		log.Printf("http server shutting down\n")
 
 		ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 		defer cancel()
@@ -45,18 +46,22 @@ func main() {
 		if err := srv.Shutdown(ctx); err != nil {
 			log.Printf("http server shutdown error: %v", err)
 		}
-
-		log.Println("shutdown complete")
-
+		if err := c.Db.Close(); err != nil {
+			log.Printf("database shutdown error: %v", err)
+		}
 		close(idleConnsClosed)
 	}()
 
+	// Handle Telegram Command
+	c.HandleCommand()
+
 	// Serve
-	go c.HandleCommand()
 	log.Printf("Listening to port %s.\n", port)
 	if err := srv.ListenAndServe(); err != nil {
 		if err.Error() != "http: Server closed" {
 			log.Printf("HTTP server closed with: %v\n", err)
 		}
 	}
+
+	wg.Wait()
 }
