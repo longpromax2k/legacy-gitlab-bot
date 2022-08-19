@@ -12,7 +12,7 @@ var (
 	err error
 )
 
-func init() {
+func main() {
 	Db, err = bbolt.Open("./data.db", 0600, nil)
 	if err != nil {
 		log.Fatal(err)

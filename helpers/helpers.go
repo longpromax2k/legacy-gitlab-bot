@@ -13,7 +13,7 @@ var (
 	err error
 )
 
-func init() {
+func main() {
 	// Load Environment Variable
 	if err = godotenv.Load(); err != nil {
 		log.Printf("No .env file found\n")
@@ -26,4 +26,5 @@ func init() {
 		log.Panic(err)
 		return
 	}
+	Bot.Debug = true
 }
