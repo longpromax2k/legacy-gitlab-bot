@@ -13,14 +13,14 @@ var (
 	err error
 )
 
-func main() {
+func init() {
 	// Load Environment Variable
-	if err = godotenv.Load(); err != nil {
+	if err := godotenv.Load(); err != nil {
 		log.Printf("No .env file found\n")
 	}
-	botToken := os.Getenv("TELEGRAM_BOT_TOKEN")
 
 	// Load bot instance
+	botToken := os.Getenv("TELEGRAM_BOT_TOKEN")
 	Bot, err = tgbot.NewBotAPI(botToken)
 	if err != nil {
 		log.Panic(err)
