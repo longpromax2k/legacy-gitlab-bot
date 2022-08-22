@@ -1,57 +1,56 @@
 package controllers
 
 import (
+	"context"
+	"fmt"
+	"log"
+	"os"
 	"strconv"
 
 	tgbot "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	h "github.com/tatsuxyz/GitLabHook/helpers"
 	"github.com/tatsuxyz/GitLabHook/model"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
+
+type User struct {
+	ID primitive.ObjectID `bson:"_id" json:"id,omitempty"`
+}
 
 var chatId string
 
 func CommandStart(up *tgbot.Update, msg *tgbot.MessageConfig) {
 	chatId = strconv.Itoa(int(up.Message.Chat.ID))
-	// hostUrl, urlPath := os.Getenv("HOST_URL"), os.Getenv("URL_PATH")
-
-	// TODO: check existed data
-	// res := q.FindInGroup(chatId)
-	// if res.Token != "" {
-	// 	log.Printf("Document existed.\n")
-	// 	msg.Text = model.ChatExistMsg
-	// 	return
-	// }
+	var re User
+	cid := strconv.Itoa(int(up.Message.Chat.ID))
+	//TODO: check existed data
+	err := h.Col.FindOne(context.TODO(), bson.D{{Key: "chatId", Value: "cid"}}).Decode(&re)
+	//err.Decode(&re)
+	if err != mongo.ErrNoDocuments {
+		log.Printf("Document existed.\n")
+		msg.Text = fmt.Sprintf(model.ChatExistMsg, os.Getenv("HOST_URL"), re.ID)
+		return
+	}
 
 	// TODO: insert new value into database
-	// old code
-	// h.Db.Update(func(tx *bbolt.Tx) error {
-	// 	b := tx.Bucket([]byte("gitlabhook"))
-	// 	v := b.Get([]byte(chatId))
+	doc := bson.D{{Key: "chatId", Value: cid}}
+	result, _ := h.Col.InsertOne(context.TODO(), doc)
+	oid := result.InsertedID.(primitive.ObjectID)
+	log.Printf("Inserted doc with id:%v.\n", result.InsertedID)
+	msg.Text = fmt.Sprintf(model.ChatInsertMsg, os.Getenv("HOST_URL"), oid.Hex())
 
-	// 	if v != nil {
-	// 		msg.Text = fmt.Sprintf(model.ChatExistMsg, hostUrl, urlPath, chatId, v)
-	// 	} else {
-	// 		uid := uuid.New()
-	// 		err := b.Put([]byte(chatId), []byte(uid.String()))
-	// 		if err != nil {
-	// 			return err
-	// 		}
-
-	// 		msg.Text = fmt.Sprintf(model.ChatInsertMsg, hostUrl, urlPath, chatId, uid)
-	// 	}
-
-	// 	return nil
-	// })
 }
 
 func CommandDrop(up *tgbot.Update, msg *tgbot.MessageConfig) {
 	chatId = strconv.Itoa(int(up.Message.Chat.ID))
 
 	// TODO
-	// h.Db.Update(func(tx *bbolt.Tx) error {
-	// 	b := tx.Bucket([]byte("gitlabhook"))
-	// 	b.Delete([]byte(chatId))
-	// 	return nil
-	// })
-
+	filter := bson.D{{Key: "chatId", Value: chatId}}
+	_, err := h.Col.DeleteOne(context.TODO(), filter)
+	if err != nil {
+		panic(err)
+	}
 	msg.Text = model.ChatDropMsg
 }

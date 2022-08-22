@@ -14,6 +14,7 @@ import (
 var (
 	Bot *tgbot.BotAPI
 	Db  *mongo.Client
+	Col *mongo.Collection
 	err error
 )
 
