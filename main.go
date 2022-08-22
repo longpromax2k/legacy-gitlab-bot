@@ -11,20 +11,20 @@ import (
 	"time"
 
 	c "github.com/tatsuxyz/GitLabHook/controllers"
+	h "github.com/tatsuxyz/GitLabHook/helpers"
 	r "github.com/tatsuxyz/GitLabHook/routes"
 )
 
 func main() {
-	port := os.Getenv("PORT")
+	h.LoadConfig()
 	var wg sync.WaitGroup
 	wg.Add(1)
 
 	// Handle request and endpoints
 	r.HandleRoute()
-
 	// server config
 	srv := &http.Server{
-		Addr:    ":" + port,
+		Addr:    ":" + h.Port,
 		Handler: r.R,
 	}
 
@@ -46,7 +46,7 @@ func main() {
 		if err := srv.Shutdown(ctx); err != nil {
 			log.Printf("http server shutdown error: %v", err)
 		}
-		if err := c.Db.Close(); err != nil {
+		if err := h.Db.Disconnect(ctx); err != nil {
 			log.Printf("database shutdown error: %v", err)
 		}
 		close(idleConnsClosed)
@@ -54,9 +54,8 @@ func main() {
 
 	// Handle Telegram Command
 	c.HandleCommand()
-
 	// Serve
-	log.Printf("Listening to port %s.\n", port)
+	log.Printf("Listening to port %s.\n", h.Port)
 	if err := srv.ListenAndServe(); err != nil {
 		if err.Error() != "http: Server closed" {
 			log.Printf("HTTP server closed with: %v\n", err)
