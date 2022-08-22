@@ -1,44 +1,48 @@
 package controllers
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 	"log"
 	"net/http"
-	"strings"
 
 	"github.com/go-chi/chi/v5"
 	tgbot "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	h "github.com/tatsuxyz/GitLabHook/helpers"
 	lib "github.com/tatsuxyz/GitLabHook/libraries"
 	"github.com/tatsuxyz/GitLabHook/model"
-	"go.etcd.io/bbolt"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 func HandleHook(w http.ResponseWriter, r *http.Request) {
-	urlId := chi.URLParam(r, "id")
-	s := strings.Split(urlId, ".")
+	chiParam := chi.URLParam(r, "id")
 
-	chatId, token := s[0], s[1]
+	var findRes bson.M
+	uid, err := primitive.ObjectIDFromHex(chiParam)
+	if err != nil {
+		log.Panic(err)
+	}
 
-	Db.View(func(tx *bbolt.Tx) error {
-		b := tx.Bucket([]byte("gitlabhook"))
-		v := b.Get([]byte(chatId))
+	err = h.GroupCol.FindOne(context.TODO(), bson.D{{Key: "_id", Value: uid}}).Decode(&findRes)
+	if err == mongo.ErrNoDocuments {
+		log.Fatal(err)
+		return
+	}
+	if err != nil {
+		log.Panic(err)
+		return
+	}
+	var res model.GroupDocument
+	bb, _ := bson.Marshal(findRes)
+	bson.Unmarshal(bb, &res)
 
-		if v != nil {
-			if string(v[:]) == token {
-				body, _ := io.ReadAll(r.Body)
-				var pay model.ObjectKind
-				json.Unmarshal(body, &pay)
-				lib.SendTelegramMessage(pay, body, chatId)
-			} else {
-				w.WriteHeader(404)
-			}
-		} else {
-			w.WriteHeader(404)
-		}
-		return nil
-	})
+	body, _ := io.ReadAll(r.Body)
+	var pay model.ObjectKind
+	json.Unmarshal(body, &pay)
+	lib.SendTelegramMessage(pay, body, res.ChatId)
 }
 
 func HandleCommand() {
