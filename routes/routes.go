@@ -1,11 +1,10 @@
 package routes
 
 import (
-	"os"
-
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	c "github.com/tatsuxyz/GitLabHook/controllers"
+	h "github.com/tatsuxyz/GitLabHook/helpers"
 )
 
 var (
@@ -15,5 +14,5 @@ var (
 func HandleRoute() {
 	R.Use(middleware.Logger)
 
-	R.Post("/"+os.Getenv("URL_PATH")+"/{id}", c.HandleHook)
+	R.Post("/"+h.UrlPath+"/{id}", c.HandleHook)
 }
