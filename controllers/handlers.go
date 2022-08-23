@@ -52,17 +52,19 @@ func HandleCommand() {
 	var r bson.M
 
 	err := h.CheckUpCol.FindOne(context.TODO(), bson.D{{Key: "status", Value: true}}).Decode(&r)
+	//log.Println(err)
 	if err != mongo.ErrNoDocuments {
 		log.Printf("There's an existed instance running, no check needed.")
-		return
-	}
-	doc := bson.D{{Key: "status", Value: true}}
-	res, err := h.CheckUpCol.InsertOne(context.TODO(), doc)
-	if err != nil {
-		log.Fatal(err)
-	}
-	CheckUpOid = res.InsertedID.(primitive.ObjectID)
 
+	} else {
+		log.Println("ffasdsad")
+		doc := bson.D{{Key: "status", Value: true}}
+		res, err := h.CheckUpCol.InsertOne(context.TODO(), doc)
+		if err != nil {
+			log.Fatal(err)
+		}
+		CheckUpOid = res.InsertedID.(primitive.ObjectID)
+	}
 	u := tgbot.NewUpdate(0)
 	u.Timeout = 60
 

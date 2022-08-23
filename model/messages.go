@@ -20,7 +20,7 @@ var (
 )
 
 var (
-	ChatExistMsg  = "Your chat is already added! Use this Webhook URL above to setup the notification."
+	ChatExistMsg  = "Your chat is already added! Use this Webhook URL above to setup the notification. \n\n`https://%s/%s/%s`"
 	ChatInsertMsg = "Hi there! To setup notifications *for this chat* with your GitLab repository, open Settings/Webhooks and add this URL:\n\n`https://%s/%s/%s`"
 	ChatNotCmdMsg = "Invalid Command. To interact with me:\n\n`/start` to get a webhook link.\n`/drop` to drop webhook link."
 	ChatDropMsg   = "Your notification is dropped, you'll no longer receive any message until you start a new one."

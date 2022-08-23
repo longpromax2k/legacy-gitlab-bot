@@ -16,13 +16,22 @@ import (
 
 var chatId string
 
+//	type User struct {
+//		ID primitive.ObjectID `bson:"_id" json:"id,omitempty"`
+//	}
+type User struct {
+	ID primitive.ObjectID `bson:"_id" json:"id,omitempty"`
+}
+
 func CommandStart(up *tgbot.Update, msg *tgbot.MessageConfig) {
 	chatId = strconv.Itoa(int(up.Message.Chat.ID))
-	var r bson.M
+
+	var r User
 
 	err := h.GroupCol.FindOne(context.TODO(), bson.D{{Key: "chatId", Value: chatId}}).Decode(&r)
+	log.Println(err)
 	if err != mongo.ErrNoDocuments {
-		msg.Text = model.ChatExistMsg
+		msg.Text = fmt.Sprintf(model.ChatExistMsg, h.HostUrl, h.UrlPath, r.ID.Hex())
 		return
 	}
 
@@ -32,7 +41,6 @@ func CommandStart(up *tgbot.Update, msg *tgbot.MessageConfig) {
 		log.Fatal(err)
 	}
 	oid := res.InsertedID.(primitive.ObjectID)
-
 	msg.Text = fmt.Sprintf(model.ChatInsertMsg, h.HostUrl, h.UrlPath, oid.Hex())
 }
 
