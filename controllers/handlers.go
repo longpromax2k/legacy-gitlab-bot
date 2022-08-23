@@ -17,6 +17,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+var CheckUpOid primitive.ObjectID
+
 func HandleHook(w http.ResponseWriter, r *http.Request) {
 	chiParam := chi.URLParam(r, "id")
 
@@ -28,13 +30,14 @@ func HandleHook(w http.ResponseWriter, r *http.Request) {
 
 	err = h.GroupCol.FindOne(context.TODO(), bson.D{{Key: "_id", Value: uid}}).Decode(&findRes)
 	if err == mongo.ErrNoDocuments {
-		log.Fatal(err)
+		w.WriteHeader(404)
 		return
 	}
 	if err != nil {
-		log.Panic(err)
+		w.WriteHeader(500)
 		return
 	}
+
 	var res model.GroupDocument
 	bb, _ := bson.Marshal(findRes)
 	bson.Unmarshal(bb, &res)
@@ -46,6 +49,20 @@ func HandleHook(w http.ResponseWriter, r *http.Request) {
 }
 
 func HandleCommand() {
+	var r bson.M
+
+	err := h.CheckUpCol.FindOne(context.TODO(), bson.D{{Key: "status", Value: true}}).Decode(&r)
+	if err != mongo.ErrNoDocuments {
+		log.Printf("There's an existed instance running, no check needed.")
+		return
+	}
+	doc := bson.D{{Key: "status", Value: true}}
+	res, err := h.CheckUpCol.InsertOne(context.TODO(), doc)
+	if err != nil {
+		log.Fatal(err)
+	}
+	CheckUpOid = res.InsertedID.(primitive.ObjectID)
+
 	u := tgbot.NewUpdate(0)
 	u.Timeout = 60
 

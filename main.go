@@ -13,10 +13,10 @@ import (
 	c "github.com/tatsuxyz/GitLabHook/controllers"
 	h "github.com/tatsuxyz/GitLabHook/helpers"
 	r "github.com/tatsuxyz/GitLabHook/routes"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 func main() {
-	h.LoadConfig()
 	var wg sync.WaitGroup
 	wg.Add(1)
 
@@ -43,17 +43,25 @@ func main() {
 		ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 		defer cancel()
 
+		if c.CheckUpOid.Hex() != "000000000000000000000000" {
+			f := bson.D{{Key: "_id", Value: c.CheckUpOid}}
+			if _, err := h.CheckUpCol.DeleteOne(context.TODO(), f); err != nil {
+				log.Panic(err)
+			}
+		}
 		if err := srv.Shutdown(ctx); err != nil {
 			log.Printf("http server shutdown error: %v", err)
 		}
 		if err := h.Db.Disconnect(ctx); err != nil {
 			log.Printf("database shutdown error: %v", err)
 		}
+
+		log.Printf("shutdown completed\n")
 		close(idleConnsClosed)
 	}()
 
 	// Handle Telegram Command
-	c.HandleCommand()
+	go c.HandleCommand()
 	// Serve
 	log.Printf("Listening to port %s.\n", h.Port)
 	if err := srv.ListenAndServe(); err != nil {
