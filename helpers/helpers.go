@@ -14,30 +14,33 @@ import (
 var (
 	Bot *tgbot.BotAPI
 	Db  *mongo.Client
-	Col *mongo.Collection
 	err error
 )
 
 var (
-	GroupCol *mongo.Collection
-	CheckUp  *mongo.Collection
+	GroupCol   *mongo.Collection
+	CheckUpCol *mongo.Collection
 )
 
 var (
-	Port     string
-	UrlPath  string
+	Port    string
+	HostUrl string
+	UrlPath string
+
 	botToken string
 	mongoURI string
 )
 
-func LoadConfig() {
+func init() {
 	// Load Environment Variable
 	if err := godotenv.Load(); err != nil {
 		log.Printf("No .env file found\n")
 	}
+
 	Port = os.Getenv("PORT")
-	botToken = os.Getenv("TELEGRAM_BOT_TOKEN")
+	HostUrl = os.Getenv("HOST_URL")
 	UrlPath = os.Getenv("URL_PATH")
+	botToken = os.Getenv("TELEGRAM_BOT_TOKEN")
 	mongoURI = os.Getenv("MONGO_URI")
 
 	// Load bot instance
@@ -51,7 +54,7 @@ func LoadConfig() {
 
 	// Load database
 	if mongoURI == "" {
-		log.Fatal("You must set your 'MONGODB_URI' environmental variable.\n")
+		log.Fatalf("You must set your 'MONGODB_URI' environmental variable.\n")
 		return
 	}
 	Db, err = mongo.Connect(context.TODO(), options.Client().ApplyURI(mongoURI))
@@ -60,5 +63,5 @@ func LoadConfig() {
 	}
 
 	GroupCol = Db.Database("app").Collection("group")
-	CheckUp = Db.Database("app").Collection("checkup")
+	CheckUpCol = Db.Database("app").Collection("checkup")
 }
