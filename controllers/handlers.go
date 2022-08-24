@@ -50,21 +50,23 @@ func HandleHook(w http.ResponseWriter, r *http.Request) {
 
 func HandleCommand() {
 	var r bson.M
-
 	err := h.CheckUpCol.FindOne(context.TODO(), bson.D{{Key: "status", Value: true}}).Decode(&r)
-	//log.Println(err)
 	if err != mongo.ErrNoDocuments {
 		log.Printf("There's an existed instance running, no check needed.")
-
-	} else {
-		log.Println("ffasdsad")
-		doc := bson.D{{Key: "status", Value: true}}
-		res, err := h.CheckUpCol.InsertOne(context.TODO(), doc)
-		if err != nil {
-			log.Fatal(err)
+		for {
+			err := h.CheckUpCol.FindOne(context.TODO(), bson.D{{Key: "status", Value: true}}).Decode(&r)
+			if err != mongo.ErrNoDocuments {
+				continue
+			}
+			break
 		}
-		CheckUpOid = res.InsertedID.(primitive.ObjectID)
 	}
+	doc := bson.D{{Key: "status", Value: true}}
+	res, err := h.CheckUpCol.InsertOne(context.TODO(), doc)
+	if err != nil {
+		log.Fatal(err)
+	}
+	CheckUpOid = res.InsertedID.(primitive.ObjectID)
 	u := tgbot.NewUpdate(0)
 	u.Timeout = 60
 
@@ -95,3 +97,16 @@ func HandleCommand() {
 		}
 	}
 }
+
+// err := h.CheckUpCol.FindOne(context.TODO(), bson.D{{Key: "status", Value: true}}).Decode(&r)
+// if err != mongo.ErrNoDocuments {
+// 	log.Printf("There's an existed instance running, no check needed.")
+
+// } else {
+// 	doc := bson.D{{Key: "status", Value: true}}
+// 	res, err := h.CheckUpCol.InsertOne(context.TODO(), doc)
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
+// 	CheckUpOid = res.InsertedID.(primitive.ObjectID)
+// }

@@ -24,8 +24,9 @@ func main() {
 	r.HandleRoute()
 	// server config
 	srv := &http.Server{
-		Addr:    ":" + h.Port,
-		Handler: r.R,
+		Addr:        ":" + h.Port,
+		Handler:     r.R,
+		ReadTimeout: 10 * time.Second,
 	}
 
 	// Listening to interrupt signal
@@ -48,6 +49,7 @@ func main() {
 			if _, err := h.CheckUpCol.DeleteOne(context.TODO(), f); err != nil {
 				log.Panic(err)
 			}
+
 		}
 		if err := srv.Shutdown(ctx); err != nil {
 			log.Printf("http server shutdown error: %v", err)
@@ -63,12 +65,14 @@ func main() {
 	// Handle Telegram Command
 	go c.HandleCommand()
 	// Serve
-	log.Printf("Listening to port %s.\n", h.Port)
-	if err := srv.ListenAndServe(); err != nil {
-		if err.Error() != "http: Server closed" {
-			log.Printf("HTTP server closed with: %v\n", err)
+	go func() {
+		log.Printf("Listening to port %s.\n", h.Port)
+		if err := srv.ListenAndServe(); err != nil {
+			if err.Error() != "http: Server closed" {
+				log.Printf("HTTP server closed with: %v\n", err)
+			}
 		}
-	}
 
+	}()
 	wg.Wait()
 }
