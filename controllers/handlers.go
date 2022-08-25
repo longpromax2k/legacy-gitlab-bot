@@ -7,11 +7,12 @@ import (
 	"log"
 	"net/http"
 
+	h "gitlabhook/helpers"
+	lib "gitlabhook/libraries"
+	"gitlabhook/model"
+
 	"github.com/go-chi/chi/v5"
 	tgbot "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	h "github.com/tatsuxyz/GitLabHook/helpers"
-	lib "github.com/tatsuxyz/GitLabHook/libraries"
-	"github.com/tatsuxyz/GitLabHook/model"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"

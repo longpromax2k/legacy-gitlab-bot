@@ -7,11 +7,12 @@ import (
 	"strconv"
 	"strings"
 
+	h "gitlabhook/helpers"
+	mdl "gitlabhook/model"
+	webhook "gitlabhook/model/webhook"
+	cmt "gitlabhook/model/webhook/comment"
+
 	tgbot "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	h "github.com/tatsuxyz/GitLabHook/helpers"
-	mdl "github.com/tatsuxyz/GitLabHook/model"
-	webhook "github.com/tatsuxyz/GitLabHook/model/webhook"
-	cmt "github.com/tatsuxyz/GitLabHook/model/webhook/comment"
 )
 
 func SendTelegramMessage(pay mdl.ObjectKind, body []byte, cId string) {

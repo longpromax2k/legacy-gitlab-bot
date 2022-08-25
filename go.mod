@@ -1,4 +1,4 @@
-module github.com/tatsuxyz/GitLabHook
+module gitlabhook
 
 go 1.18
 

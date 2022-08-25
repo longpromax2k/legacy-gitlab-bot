@@ -1,10 +1,11 @@
 package routes
 
 import (
+	c "gitlabhook/controllers"
+	h "gitlabhook/helpers"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	c "github.com/tatsuxyz/GitLabHook/controllers"
-	h "github.com/tatsuxyz/GitLabHook/helpers"
 )
 
 var (

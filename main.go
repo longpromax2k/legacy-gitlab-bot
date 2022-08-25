@@ -10,9 +10,10 @@ import (
 	"syscall"
 	"time"
 
-	c "github.com/tatsuxyz/GitLabHook/controllers"
-	h "github.com/tatsuxyz/GitLabHook/helpers"
-	r "github.com/tatsuxyz/GitLabHook/routes"
+	c "gitlabhook/controllers"
+	h "gitlabhook/helpers"
+	r "gitlabhook/routes"
+
 	"go.mongodb.org/mongo-driver/bson"
 )
 
