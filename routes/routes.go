@@ -1,8 +1,7 @@
 package routes
 
 import (
-	c "gitlabhook/controllers"
-	h "gitlabhook/helpers"
+	c "gitbot/controllers"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -15,5 +14,5 @@ var (
 func HandleRoute() {
 	R.Use(middleware.Logger)
 
-	R.Post("/"+h.UrlPath+"/{id}", c.HandleHook)
+	R.Post("/"+config.URL_PATHr+"/{id}", c.HandleHook)
 }

@@ -7,10 +7,10 @@ import (
 	"strconv"
 	"strings"
 
-	h "gitlabhook/helpers"
-	mdl "gitlabhook/model"
-	webhook "gitlabhook/model/webhook"
-	cmt "gitlabhook/model/webhook/comment"
+	h "gitbot/helpers"
+	mdl "gitbot/model"
+	webhook "gitbot/model/webhook"
+	cmt "gitbot/model/webhook/comment"
 
 	tgbot "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )

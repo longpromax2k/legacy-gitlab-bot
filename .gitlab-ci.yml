@@ -1,0 +1,38 @@
+default:
+  tags:
+    - appvn-fpt
+
+stages:
+  - test
+  - build
+  - deploy
+
+test:
+  stage: test
+  image: golang:1.18
+  script:
+    - go test -coverprofile=cover.prof ./...
+    - go tool cover -func cover.prof
+  coverage: /^total.+\s+(\d+\.?\d+\%)$/
+
+build:
+  stage: build
+  only:
+    - main
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: ['']
+  script:
+    - mkdir -p /kaniko/.docker
+    - echo "{\"auths\":{\"docker.appota.com\":{\"auth\":\"$(echo -n gitlab-ci-token:$CI_BUILD_TOKEN | base64)\"}}}" > /kaniko/.docker/config.json
+    - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --destination "$CI_REGISTRY_IMAGE:${CI_BUILD_REF_NAME}_${CI_BUILD_REF:0:8}"
+
+deploy:
+  stage: deploy
+  only:
+    - main
+  image: freecoder/golang-gitlabci:1.16
+  script:
+    - kubectl -n adsota-svc create secret docker-registry deploy-gitlab-bot --docker-server="$CI_REGISTRY" --docker-username="$CI_DEPLOY_USER" --docker-password="$CI_DEPLOY_PASSWORD" --dry-run -o yaml | kubectl apply --namespace=adsota-svc -f -
+    - tag="${CI_BUILD_REF_NAME}_${CI_BUILD_REF:0:8}"
+    - sed -e "s/<IMAGE_TAG>/$api_tag/" deploy.yml | kubectl apply --namespace=adsota-svc -f -

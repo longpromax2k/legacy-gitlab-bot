@@ -10,14 +10,22 @@ import (
 	"syscall"
 	"time"
 
-	c "gitlabhook/controllers"
-	h "gitlabhook/helpers"
-	r "gitlabhook/routes"
+	c "gitbot/controllers"
+	h "gitbot/helpers"
+	r "gitbot/routes"
+	"gitbot/util"
 
 	"go.mongodb.org/mongo-driver/bson"
 )
 
+var config, err = util.LoadConfig(".")
+
 func main() {
+
+	//config, err := util.LoadConfig(".")
+	if err != nil {
+		log.Fatal("cannot load config:", err)
+	}
 	var wg sync.WaitGroup
 	wg.Add(1)
 
@@ -25,7 +33,7 @@ func main() {
 	r.HandleRoute()
 	// server config
 	srv := &http.Server{
-		Addr:        ":" + h.Port,
+		Addr:        ":" + config.Port,
 		Handler:     r.R,
 		ReadTimeout: 10 * time.Second,
 	}
@@ -67,7 +75,7 @@ func main() {
 	go c.HandleCommand()
 	// Serve
 	go func() {
-		log.Printf("Listening to port %s.\n", h.Port)
+		log.Printf("Listening to port %s.\n", config.Port)
 		if err := srv.ListenAndServe(); err != nil {
 			if err.Error() != "http: Server closed" {
 				log.Printf("HTTP server closed with: %v\n", err)

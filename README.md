@@ -1,4 +1,4 @@
-# GitLabHook
+# Gitbot
 
 A Telegram bot that sends messages about your GitLab repository via Webhooks.
 

@@ -3,13 +3,15 @@ package controllers
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
+	"strconv"
 
-	h "gitlabhook/helpers"
-	lib "gitlabhook/libraries"
-	"gitlabhook/model"
+	h "gitbot/helpers"
+	lib "gitbot/libraries"
+	"gitbot/model"
 
 	"github.com/go-chi/chi/v5"
 	tgbot "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -18,6 +20,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+var chatId string
 var CheckUpOid primitive.ObjectID
 
 func HandleHook(w http.ResponseWriter, r *http.Request) {
@@ -99,15 +102,38 @@ func HandleCommand() {
 	}
 }
 
-// err := h.CheckUpCol.FindOne(context.TODO(), bson.D{{Key: "status", Value: true}}).Decode(&r)
-// if err != mongo.ErrNoDocuments {
-// 	log.Printf("There's an existed instance running, no check needed.")
+type User struct {
+	ID primitive.ObjectID `bson:"_id" json:"id,omitempty"`
+}
 
-// } else {
-// 	doc := bson.D{{Key: "status", Value: true}}
-// 	res, err := h.CheckUpCol.InsertOne(context.TODO(), doc)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-// 	CheckUpOid = res.InsertedID.(primitive.ObjectID)
-// }
+func CommandStart(up *tgbot.Update, msg *tgbot.MessageConfig) {
+	chatId = strconv.Itoa(int(up.Message.Chat.ID))
+
+	var r User
+
+	err := h.GroupCol.FindOne(context.TODO(), bson.D{{Key: "chatId", Value: chatId}}).Decode(&r)
+	log.Println(err)
+	if err != mongo.ErrNoDocuments {
+		msg.Text = fmt.Sprintf(model.ChatExistMsg, h.HostUrl, h.UrlPath, r.ID.Hex())
+		return
+	}
+
+	doc := bson.D{{Key: "chatId", Value: chatId}}
+	res, err := h.GroupCol.InsertOne(context.TODO(), doc)
+	if err != nil {
+		log.Fatal(err)
+	}
+	oid := res.InsertedID.(primitive.ObjectID)
+	msg.Text = fmt.Sprintf(model.ChatInsertMsg, h.HostUrl, h.UrlPath, oid.Hex())
+}
+
+func CommandDrop(up *tgbot.Update, msg *tgbot.MessageConfig) {
+	chatId = strconv.Itoa(int(up.Message.Chat.ID))
+
+	f := bson.D{{Key: "chatId", Value: chatId}}
+	if _, err := h.GroupCol.DeleteOne(context.TODO(), f); err != nil {
+		log.Panic(err)
+	}
+
+	msg.Text = model.ChatDropMsg
+}

@@ -2,11 +2,10 @@ package helpers
 
 import (
 	"context"
+	"gitbot/util"
 	"log"
-	"os"
 
 	tgbot "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -22,29 +21,21 @@ var (
 	CheckUpCol *mongo.Collection
 )
 
-var (
-	Port    string
-	HostUrl string
-	UrlPath string
-
-	botToken string
-	mongoURI string
-)
-
 func init() {
+
 	// Load Environment Variable
-	if err := godotenv.Load(); err != nil {
-		log.Printf("No .env file found\n")
-	}
+	// if err := godotenv.Load(); err != nil {
+	// 	log.Printf("No .env file found\n")
+	// }
+	config, err := util.LoadConfig(".")
 
-	Port = os.Getenv("PORT")
-	HostUrl = os.Getenv("HOST_URL")
-	UrlPath = os.Getenv("URL_PATH")
-	botToken = os.Getenv("TELEGRAM_BOT_TOKEN")
-	mongoURI = os.Getenv("MONGO_URI")
-
+	// Port = os.Getenv("PORT")
+	// HostUrl = os.Getenv("HOST_URL")
+	// UrlPath = os.Getenv("URL_PATH")
+	// botToken = os.Getenv("TELEGRAM_BOT_TOKEN")
+	// mongoURI = os.Getenv("MONGO_URI")
 	// Load bot instance
-	Bot, err = tgbot.NewBotAPI(botToken)
+	Bot, err = tgbot.NewBotAPI(config.BotToken)
 	if err != nil {
 		log.Panic(err)
 		return
