@@ -7,12 +7,13 @@ import (
 	"sync"
 
 	"github.com/joho/godotenv"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 var (
 	lock        = &sync.Mutex{}
 	env         *models.Config
-	checkStatus string
+	checkStatus primitive.ObjectID
 )
 
 func GetConfig() *models.Config {
@@ -38,9 +39,9 @@ func GetConfig() *models.Config {
 	return env
 }
 
-func GetCheckStatus() string {
+func GetCheckStatus() primitive.ObjectID {
 	return checkStatus
 }
-func SetCheckStatus(id string) {
-	checkStatus = id
+func SetCheckStatus(objectId primitive.ObjectID) {
+	checkStatus = objectId
 }

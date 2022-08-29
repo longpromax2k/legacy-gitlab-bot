@@ -27,7 +27,7 @@ func LoadDatabase() (*mongo.Client, error) {
 
 func CloseDatabase(ctx context.Context) error {
 	checkStatus := configs.GetCheckStatus()
-	if checkStatus != "000000000000000000000000" {
+	if checkStatus.Hex() != "000000000000000000000000" {
 		f := bson.D{{Key: "_id", Value: checkStatus}}
 		if _, err := GetCol().DeleteOne(context.TODO(), f); err != nil {
 			log.Panic(err)

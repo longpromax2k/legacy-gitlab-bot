@@ -8,8 +8,6 @@ import (
 	"log"
 	"net/http"
 
-	lib "gitbot/libraries"
-
 	"github.com/go-chi/chi/v5"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -35,7 +33,6 @@ func HandleWebHook(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(500)
 		return
 	}
-
 	var res models.GroupDocument
 	bb, _ := bson.Marshal(findRes)
 	bson.Unmarshal(bb, &res)
@@ -43,5 +40,5 @@ func HandleWebHook(w http.ResponseWriter, r *http.Request) {
 	body, _ := io.ReadAll(r.Body)
 	var pay models.ObjectKind
 	json.Unmarshal(body, &pay)
-	lib.SendTelegramMessage(pay, body, res.ChatId)
+	SendTelegramMessage(pay, body, res.ChatId)
 }

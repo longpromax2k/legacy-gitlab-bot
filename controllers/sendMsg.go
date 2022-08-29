@@ -19,11 +19,13 @@ func SendTelegramMessage(pay mdl.ObjectKind, body []byte, cId string) {
 	var chatId = int64(cid)
 	var dt, url, text string
 	var err error
+	bot, err := LoadBot()
 
 	switch pay.ObjectKind {
 	case "push":
 		var p webhook.PushEventPayload
 		err = json.Unmarshal(body, &p)
+		log.Println("dsadasdas")
 		dt = fmt.Sprintf(mdl.PushEventMsg, p.UserUsername, p.Ref, p.UserUsername, p.Project.Name, p.Project.Homepage, p.Commits[0].Message)
 		url, text = p.Commits[0].URL, "Open Commit"
 	case "issue":
@@ -143,5 +145,5 @@ func SendTelegramMessage(pay mdl.ObjectKind, body []byte, cId string) {
 			},
 		},
 	}
-	// h.Bot.Send(msg)
+	bot.Send(msg)
 }

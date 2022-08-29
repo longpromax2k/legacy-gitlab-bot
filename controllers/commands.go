@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"sync"
 	"time"
 
 	"gitbot/configs"
@@ -16,7 +17,10 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-var chatId string
+var (
+	lock   = &sync.Mutex{}
+	chatId string
+)
 
 type User struct {
 	ID primitive.ObjectID `bson:"_id" json:"id,omitempty"`
@@ -55,6 +59,9 @@ func CommandDrop(up *tgbot.Update, msg *tgbot.MessageConfig) {
 }
 
 func HandleCommand() {
+	lock.Lock()
+	defer lock.Unlock()
+
 	var r bson.M
 
 	for {
@@ -72,7 +79,7 @@ func HandleCommand() {
 		log.Fatal(err)
 	}
 
-	configs.SetCheckStatus(res.InsertedID.(primitive.ObjectID).Hex())
+	configs.SetCheckStatus(res.InsertedID.(primitive.ObjectID))
 
 	u := tgbot.NewUpdate(0)
 	u.Timeout = 60
