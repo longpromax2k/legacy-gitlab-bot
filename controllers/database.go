@@ -5,6 +5,7 @@ import (
 	"gitbot/configs"
 	"log"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -25,12 +26,13 @@ func LoadDatabase() (*mongo.Client, error) {
 }
 
 func CloseDatabase(ctx context.Context) error {
-	// if c.CheckUpOid.Hex() != "000000000000000000000000" {
-	// 	f := bson.D{{Key: "_id", Value: c.CheckUpOid}}
-	// 	if _, err := h.CheckUpCol.DeleteOne(context.TODO(), f); err != nil {
-	// 		log.Panic(err)
-	// 	}
-	// }
+	checkStatus := configs.GetCheckStatus()
+	if checkStatus != "000000000000000000000000" {
+		f := bson.D{{Key: "_id", Value: checkStatus}}
+		if _, err := GetCol().DeleteOne(context.TODO(), f); err != nil {
+			log.Panic(err)
+		}
+	}
 
 	if err := db.Disconnect(ctx); err != nil {
 		log.Printf("database shutdown error: %v", err)
@@ -39,9 +41,6 @@ func CloseDatabase(ctx context.Context) error {
 	return err
 }
 
-// func GetGroupCol() *mongo.Collection {
-// 	return db.Database("app").Collection("group")
-// }
-// func GetCheckUpCol() *mongo.Collection {
-// 	return db.Database("app").Collection("checkup")
-// }
+func GetCol() *mongo.Collection {
+	return db.Database("app").Collection("data")
+}

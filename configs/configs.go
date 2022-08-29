@@ -10,8 +10,9 @@ import (
 )
 
 var (
-	lock = &sync.Mutex{}
-	env  *models.Config
+	lock        = &sync.Mutex{}
+	env         *models.Config
+	checkStatus string
 )
 
 func GetConfig() *models.Config {
@@ -35,4 +36,11 @@ func GetConfig() *models.Config {
 	}
 
 	return env
+}
+
+func GetCheckStatus() string {
+	return checkStatus
+}
+func SetCheckStatus(id string) {
+	checkStatus = id
 }

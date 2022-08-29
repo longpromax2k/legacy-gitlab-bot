@@ -17,7 +17,6 @@ import (
 )
 
 var chatId string
-var CheckUpOid primitive.ObjectID
 
 type User struct {
 	ID primitive.ObjectID `bson:"_id" json:"id,omitempty"`
@@ -26,11 +25,9 @@ type User struct {
 func CommandStart(up *tgbot.Update, msg *tgbot.MessageConfig) {
 	chatId = strconv.Itoa(int(up.Message.Chat.ID))
 	cfg := configs.GetConfig()
-	groupCol := db.Database("app").Collection("group")
-
 	var r User
 
-	err := groupCol.FindOne(context.TODO(), bson.D{{Key: "chatId", Value: chatId}}).Decode(&r)
+	err := GetCol().FindOne(context.TODO(), bson.D{{Key: "chatId", Value: chatId}}).Decode(&r)
 	log.Println(err)
 	if err != mongo.ErrNoDocuments {
 		msg.Text = fmt.Sprintf(models.ChatExistMsg, cfg.HostURL, cfg.PathURL, r.ID.Hex())
@@ -38,19 +35,19 @@ func CommandStart(up *tgbot.Update, msg *tgbot.MessageConfig) {
 	}
 
 	doc := bson.D{{Key: "chatId", Value: chatId}}
-	res, err := groupCol.InsertOne(context.TODO(), doc)
+	res, err := GetCol().InsertOne(context.TODO(), doc)
 	if err != nil {
 		log.Fatal(err)
 	}
 	oid := res.InsertedID.(primitive.ObjectID)
 	msg.Text = fmt.Sprintf(models.ChatInsertMsg, cfg.HostURL, cfg.PathURL, oid.Hex())
 }
+
 func CommandDrop(up *tgbot.Update, msg *tgbot.MessageConfig) {
 	chatId = strconv.Itoa(int(up.Message.Chat.ID))
-	groupCol := db.Database("app").Collection("group")
 
 	f := bson.D{{Key: "chatId", Value: chatId}}
-	if _, err := groupCol.DeleteOne(context.TODO(), f); err != nil {
+	if _, err := GetCol().DeleteOne(context.TODO(), f); err != nil {
 		log.Panic(err)
 	}
 
@@ -59,27 +56,24 @@ func CommandDrop(up *tgbot.Update, msg *tgbot.MessageConfig) {
 
 func HandleCommand() {
 	var r bson.M
-	groupCol := db.Database("app").Collection("group")
-	checkCol := db.Database("app").Collection("checkup")
 
-	err := groupCol.FindOne(context.TODO(), bson.D{{Key: "status", Value: true}}).Decode(&r)
-	if err != mongo.ErrNoDocuments {
-		log.Printf("There's an existed instance running, no check needed.")
-		for {
+	for {
+		err := GetCol().FindOne(context.TODO(), bson.D{{Key: "status", Value: true}}).Decode(&r)
+		if err != mongo.ErrNoDocuments {
 			time.Sleep(6 * time.Second)
-			err := checkCol.FindOne(context.TODO(), bson.D{{Key: "status", Value: true}}).Decode(&r)
-			if err != mongo.ErrNoDocuments {
-				continue
-			}
-			break
+			continue
 		}
+		break
 	}
+
 	doc := bson.D{{Key: "status", Value: true}}
-	res, err := groupCol.InsertOne(context.TODO(), doc)
+	res, err := GetCol().InsertOne(context.TODO(), doc)
 	if err != nil {
 		log.Fatal(err)
 	}
-	CheckUpOid = res.InsertedID.(primitive.ObjectID)
+
+	configs.SetCheckStatus(res.InsertedID.(primitive.ObjectID).Hex())
+
 	u := tgbot.NewUpdate(0)
 	u.Timeout = 60
 

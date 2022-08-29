@@ -18,14 +18,6 @@ import (
 
 func HandleWebHook(w http.ResponseWriter, r *http.Request) {
 	chiParam := chi.URLParam(r, "id")
-	groupCol := db.Database("app").Collection("group")
-
-	log.Printf("%T: %v", chiParam, chiParam)
-
-	if chiParam == "" {
-		w.WriteHeader(500)
-		log.Fatalln("Empty string.")
-	}
 
 	var findRes bson.M
 	uid, err := primitive.ObjectIDFromHex(chiParam)
@@ -34,7 +26,7 @@ func HandleWebHook(w http.ResponseWriter, r *http.Request) {
 		log.Panic(err)
 	}
 
-	err = groupCol.FindOne(context.TODO(), bson.D{{Key: "_id", Value: uid}}).Decode(&findRes)
+	err = GetCol().FindOne(context.TODO(), bson.D{{Key: "_id", Value: uid}}).Decode(&findRes)
 	if err == mongo.ErrNoDocuments {
 		w.WriteHeader(404)
 		return
