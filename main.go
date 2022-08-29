@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"gitbot/controllers"
 	"log"
 	"net/http"
 	"os"
@@ -10,35 +11,37 @@ import (
 	"syscall"
 	"time"
 
-	c "gitbot/controllers"
-	h "gitbot/helpers"
-	r "gitbot/routes"
-	"gitbot/util"
+	"gitbot/configs"
 
-	"go.mongodb.org/mongo-driver/bson"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 )
 
-var config, err = util.LoadConfig(".")
-
 func main() {
+	cfg := configs.GetConfig()
 
-	//config, err := util.LoadConfig(".")
-	if err != nil {
-		log.Fatal("cannot load config:", err)
-	}
-	var wg sync.WaitGroup
-	wg.Add(1)
+	// Router
+	path := "/" + cfg.PathURL + "/{id}"
+	r := chi.NewRouter()
+	r.Use(middleware.Logger)
+	r.Post(path, controllers.HandleWebHook)
 
-	// Handle request and endpoints
-	r.HandleRoute()
 	// server config
 	srv := &http.Server{
-		Addr:        ":" + config.Port,
-		Handler:     r.R,
+		Addr:        ":" + cfg.Port,
+		Handler:     r,
 		ReadTimeout: 10 * time.Second,
 	}
 
+	// database
+	if _, err := controllers.LoadDatabase(); err != nil {
+		log.Fatalln(err)
+	}
+
 	// Listening to interrupt signal
+	var wg sync.WaitGroup
+	wg.Add(1)
+
 	idleConnsClosed := make(chan struct{})
 	go func() {
 		defer wg.Done()
@@ -53,18 +56,11 @@ func main() {
 		ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 		defer cancel()
 
-		if c.CheckUpOid.Hex() != "000000000000000000000000" {
-			f := bson.D{{Key: "_id", Value: c.CheckUpOid}}
-			if _, err := h.CheckUpCol.DeleteOne(context.TODO(), f); err != nil {
-				log.Panic(err)
-			}
-
+		if err := controllers.CloseDatabase(ctx); err != nil {
+			log.Fatalln(err)
 		}
 		if err := srv.Shutdown(ctx); err != nil {
 			log.Printf("http server shutdown error: %v", err)
-		}
-		if err := h.Db.Disconnect(ctx); err != nil {
-			log.Printf("database shutdown error: %v", err)
 		}
 
 		log.Printf("shutdown completed\n")
@@ -72,16 +68,15 @@ func main() {
 	}()
 
 	// Handle Telegram Command
-	go c.HandleCommand()
-	// Serve
-	go func() {
-		log.Printf("Listening to port %s.\n", config.Port)
-		if err := srv.ListenAndServe(); err != nil {
-			if err.Error() != "http: Server closed" {
-				log.Printf("HTTP server closed with: %v\n", err)
-			}
-		}
+	go controllers.HandleCommand()
 
-	}()
+	// Serve
+	log.Printf("Listening to port %s.\n", cfg.Port)
+	if err := srv.ListenAndServe(); err != nil {
+		if err.Error() != "http: Server closed" {
+			log.Printf("HTTP server closed with: %v\n", err)
+		}
+	}
+
 	wg.Wait()
 }

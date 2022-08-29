@@ -7,10 +7,9 @@ import (
 	"strconv"
 	"strings"
 
-	h "gitbot/helpers"
-	mdl "gitbot/model"
-	webhook "gitbot/model/webhook"
-	cmt "gitbot/model/webhook/comment"
+	mdl "gitbot/models"
+	webhook "gitbot/models/webhook"
+	cmt "gitbot/models/webhook/comment"
 
 	tgbot "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
@@ -144,5 +143,5 @@ func SendTelegramMessage(pay mdl.ObjectKind, body []byte, cId string) {
 			},
 		},
 	}
-	h.Bot.Send(msg)
+	// h.Bot.Send(msg)
 }

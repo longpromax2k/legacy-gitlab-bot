@@ -1,4 +1,4 @@
-package model
+package models
 
 var (
 	PushEventMsg          = "*%s* pushed to branch *%s* in [%s/%s](%s) \n*commit*: `%s`."
