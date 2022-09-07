@@ -26,13 +26,12 @@ type User struct {
 	ID primitive.ObjectID `bson:"_id" json:"id,omitempty"`
 }
 
-func CommandStart(up *tgbot.Update, msg *tgbot.MessageConfig) {
-	chatId = strconv.Itoa(int(up.Message.Chat.ID))
+func CommandStart(up *tgbot.Update, msg *tgbot.MessageConfig, cid int64) {
+	chatId = strconv.Itoa(int(cid))
 	cfg := configs.GetConfig()
 	var r User
 
 	err := GetCol().FindOne(context.TODO(), bson.D{{Key: "chatId", Value: chatId}}).Decode(&r)
-	log.Println(err)
 	if err != mongo.ErrNoDocuments {
 		msg.Text = fmt.Sprintf(models.ChatExistMsg, cfg.HostURL, cfg.PathURL, r.ID.Hex())
 		return
@@ -41,14 +40,14 @@ func CommandStart(up *tgbot.Update, msg *tgbot.MessageConfig) {
 	doc := bson.D{{Key: "chatId", Value: chatId}}
 	res, err := GetCol().InsertOne(context.TODO(), doc)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalln(err)
 	}
 	oid := res.InsertedID.(primitive.ObjectID)
 	msg.Text = fmt.Sprintf(models.ChatInsertMsg, cfg.HostURL, cfg.PathURL, oid.Hex())
 }
 
-func CommandDrop(up *tgbot.Update, msg *tgbot.MessageConfig) {
-	chatId = strconv.Itoa(int(up.Message.Chat.ID))
+func CommandDrop(up *tgbot.Update, msg *tgbot.MessageConfig, cid int64) {
+	chatId = strconv.Itoa(int(cid))
 
 	f := bson.D{{Key: "chatId", Value: chatId}}
 	if _, err := GetCol().DeleteOne(context.TODO(), f); err != nil {
@@ -92,20 +91,30 @@ func HandleCommand() {
 	ups := bot.GetUpdatesChan(u)
 
 	for up := range ups {
-		if up.Message == nil {
-			continue
+		var cmd string
+		var msg tgbot.MessageConfig
+		var chatId int64
+
+		if up.Message != nil {
+			if up.Message.IsCommand() {
+				cmd = up.Message.Command()
+				msg = tgbot.NewMessage(up.Message.Chat.ID, "")
+				chatId = up.Message.Chat.ID
+			}
 		}
-		if !up.Message.IsCommand() {
-			continue
+		if up.ChannelPost != nil {
+			if up.ChannelPost.IsCommand() {
+				cmd = up.ChannelPost.Command()
+				msg = tgbot.NewMessage(up.ChannelPost.Chat.ID, "")
+				chatId = up.ChannelPost.Chat.ID
+			}
 		}
 
-		msg := tgbot.NewMessage(up.Message.Chat.ID, "")
-
-		switch up.Message.Command() {
+		switch cmd {
 		case "start":
-			CommandStart(&up, &msg)
+			CommandStart(&up, &msg, chatId)
 		case "drop":
-			CommandDrop(&up, &msg)
+			CommandDrop(&up, &msg, chatId)
 		default:
 			msg.Text = models.ChatNotCmdMsg
 		}
@@ -114,5 +123,6 @@ func HandleCommand() {
 		if _, err := bot.Send(msg); err != nil {
 			log.Panic(err)
 		}
+		cmd = ""
 	}
 }

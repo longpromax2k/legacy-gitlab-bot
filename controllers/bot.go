@@ -14,6 +14,7 @@ func LoadBot() (*tgbotapi.BotAPI, error) {
 		log.Panic(err)
 	}
 
+	log.Println("New telegram bot instance was created.")
 	bot.Debug = true
 
 	return bot, err

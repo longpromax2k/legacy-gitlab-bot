@@ -14,6 +14,14 @@ import (
 	tgbot "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
+var previousTestID int
+var previousBuildID int
+var previousDeployID int
+var typeJob string
+var statusJob string
+var statusPipeline string
+var previousPipeline int
+
 func SendTelegramMessage(pay mdl.ObjectKind, body []byte, cId string) {
 	cid, _ := strconv.Atoi(cId)
 	var chatId = int64(cid)
@@ -25,7 +33,6 @@ func SendTelegramMessage(pay mdl.ObjectKind, body []byte, cId string) {
 	case "push":
 		var p webhook.PushEventPayload
 		err = json.Unmarshal(body, &p)
-		log.Println("dsadasdas")
 		dt = fmt.Sprintf(mdl.PushEventMsg, p.UserUsername, p.Ref, p.UserUsername, p.Project.Name, p.Project.Homepage, p.Commits[0].Message)
 		url, text = p.Commits[0].URL, "Open Commit"
 	case "issue":
@@ -87,6 +94,7 @@ func SendTelegramMessage(pay mdl.ObjectKind, body []byte, cId string) {
 	case "pipeline":
 		var p webhook.PipelineEventsLoad
 		err = json.Unmarshal(body, &p)
+		statusPipeline = p.ObjectAttributes.Status
 		dt = fmt.Sprintf(mdl.PipelineEventsMsg, p.User.Username, p.ObjectAttributes.Ref, p.User.Username, p.Project.Name, p.Project.DefaultBranch, p.ObjectAttributes.Status)
 		url, text = p.Project.WebURL, "Open Request"
 	case "deployment":
@@ -113,7 +121,9 @@ func SendTelegramMessage(pay mdl.ObjectKind, body []byte, cId string) {
 		var p webhook.JobsEvent
 		err = json.Unmarshal(body, &p)
 		dt = fmt.Sprintf(mdl.JobsEvent, p.BuildName, p.Ref, p.BuildStatus)
-		url, text = p.Repository.Homepage, "Open Repository"
+		typeJob = p.BuildStage
+		statusJob = p.BuildStatus
+		url, text = p.Repository.Homepage, ""
 	case "feature_flag":
 		var p webhook.FeatureFlag
 		err = json.Unmarshal(body, &p)
@@ -128,12 +138,12 @@ func SendTelegramMessage(pay mdl.ObjectKind, body []byte, cId string) {
 	default:
 		log.Fatalf("Invalid Event\n")
 	}
-
 	if err != nil {
 		log.Fatalf("Json unmarshal error: , %v\n", err)
 	}
 
 	msg := tgbot.NewMessage(chatId, dt)
+
 	msg.ParseMode = "markdown"
 	msg.ReplyMarkup = tgbot.InlineKeyboardMarkup{
 		InlineKeyboard: [][]tgbot.InlineKeyboardButton{
@@ -145,5 +155,52 @@ func SendTelegramMessage(pay mdl.ObjectKind, body []byte, cId string) {
 			},
 		},
 	}
-	bot.Send(msg)
+
+	//var p webhook.JobsEvent
+
+	log.Println(pay.ObjectKind, "1")
+	if pay.ObjectKind == "build" {
+		if typeJob == "test" && statusJob != "created" {
+			msg1 := tgbot.NewEditMessageText(chatId, previousTestID, dt)
+			bot.Send(msg1)
+			//previousTestID=m1.MessageID
+		}
+		if typeJob == "build" && statusJob != "created" {
+			msg1 := tgbot.NewEditMessageText(chatId, previousBuildID, dt)
+			bot.Send(msg1)
+			//previousBuildID=m1.MessageID
+		}
+		if typeJob == "deploy" && statusJob != "created" {
+			msg1 := tgbot.NewEditMessageText(chatId, previousDeployID, dt)
+			bot.Send(msg1)
+			//previousDeployID=m1.MessageID
+		}
+		if typeJob == "test" && statusJob == "created" {
+			m1, _ := bot.Send(msg)
+			previousTestID = m1.MessageID
+		}
+		if typeJob == "build" && statusJob == "created" {
+			m1, _ := bot.Send(msg)
+			previousBuildID = m1.MessageID
+		}
+		if typeJob == "deploy" && statusJob == "created" {
+			m1, _ := bot.Send(msg)
+			previousDeployID = m1.MessageID
+		}
+	} else if pay.ObjectKind == "pipeline" {
+		if statusPipeline == "pending" {
+			m1, _ := bot.Send(msg)
+			previousPipeline = m1.MessageID
+		} else {
+			msg1 := tgbot.NewEditMessageText(chatId, previousPipeline, dt)
+			bot.Send(msg1)
+		}
+
+	} else {
+		bot.Send(msg)
+	}
+	//bot.Send(msg)
+	//return
 }
+
+//func EditTelegramMessgae()

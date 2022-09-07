@@ -27,12 +27,15 @@ func GetConfig() *models.Config {
 			}
 
 			env = &models.Config{
-				Port:     os.Getenv("PORT"),
-				HostURL:  os.Getenv("HOST_URL"),
-				PathURL:  os.Getenv("URL_PATH"),
-				BotToken: os.Getenv("TELEGRAM_BOT_TOKEN"),
-				MongoURI: os.Getenv("MONGO_URI"),
+				Port:          os.Getenv("PORT"),
+				HostURL:       os.Getenv("HOST_URL"),
+				PathURL:       os.Getenv("URL_PATH"),
+				BotToken:      os.Getenv("TELEGRAM_BOT_TOKEN"),
+				MongoURI:      os.Getenv("MONGO_URI"),
+				MongoDatabase: os.Getenv("MONGO_DATABASE"),
 			}
+
+			log.Println("Configurations loaded successfully.")
 		}
 	}
 

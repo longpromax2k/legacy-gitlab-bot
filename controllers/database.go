@@ -15,13 +15,18 @@ var (
 	err error
 )
 
+var cfg = configs.GetConfig()
+
 func LoadDatabase() (*mongo.Client, error) {
-	cfg := configs.GetConfig()
 	if cfg.MongoURI == "" {
 		log.Fatalf("You must set your 'MONGO_URI' environmental variable.\n")
 	}
 
 	db, err = mongo.Connect(context.TODO(), options.Client().ApplyURI(cfg.MongoURI))
+	if err == nil {
+		log.Println("Connect to MongoDB database successfully.")
+	}
+
 	return db, err
 }
 
@@ -38,9 +43,11 @@ func CloseDatabase(ctx context.Context) error {
 		log.Printf("database shutdown error: %v", err)
 	}
 
+	log.Println("Close MongoDB database successfully.")
+
 	return err
 }
 
 func GetCol() *mongo.Collection {
-	return db.Database("app").Collection("data")
+	return db.Database(cfg.MongoDatabase).Collection("data")
 }
