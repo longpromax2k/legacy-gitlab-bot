@@ -21,6 +21,8 @@ var typeJob string
 var statusJob string
 var statusPipeline string
 var previousPipeline int
+var currentMesID int
+var count int
 
 func SendTelegramMessage(pay mdl.ObjectKind, body []byte, cId string) {
 	cid, _ := strconv.Atoi(cId)
@@ -155,49 +157,71 @@ func SendTelegramMessage(pay mdl.ObjectKind, body []byte, cId string) {
 			},
 		},
 	}
-
+	msg1 := tgbot.NewEditMessageText(chatId, currentMesID, dt)
+	msg1.ParseMode = "markdown"
+	msg1.ReplyMarkup = &tgbot.InlineKeyboardMarkup{
+		InlineKeyboard: [][]tgbot.InlineKeyboardButton{
+			{
+				tgbot.InlineKeyboardButton{
+					Text: text,
+					URL:  &url,
+				},
+			},
+		},
+	}
 	//var p webhook.JobsEvent
 
 	log.Println(pay.ObjectKind, "1")
 	if pay.ObjectKind == "build" {
 		if typeJob == "test" && statusJob != "created" {
-			msg1 := tgbot.NewEditMessageText(chatId, previousTestID, dt)
+			msg1 = tgbot.NewEditMessageText(chatId, currentMesID, dt)
 			bot.Send(msg1)
 			//previousTestID=m1.MessageID
 		}
 		if typeJob == "build" && statusJob != "created" {
-			msg1 := tgbot.NewEditMessageText(chatId, previousBuildID, dt)
+			msg1 = tgbot.NewEditMessageText(chatId, currentMesID, dt)
 			bot.Send(msg1)
 			//previousBuildID=m1.MessageID
 		}
 		if typeJob == "deploy" && statusJob != "created" {
-			msg1 := tgbot.NewEditMessageText(chatId, previousDeployID, dt)
+			msg1 = tgbot.NewEditMessageText(chatId, currentMesID, dt)
 			bot.Send(msg1)
 			//previousDeployID=m1.MessageID
 		}
-		if typeJob == "test" && statusJob == "created" {
-			m1, _ := bot.Send(msg)
-			previousTestID = m1.MessageID
+		if statusJob == "created" {
+
+			count++
+			log.Println("hello", count)
+			if count%3 == 1 {
+				m1, _ := bot.Send(msg)
+				currentMesID = m1.MessageID
+			}
 		}
-		if typeJob == "build" && statusJob == "created" {
-			m1, _ := bot.Send(msg)
-			previousBuildID = m1.MessageID
-		}
-		if typeJob == "deploy" && statusJob == "created" {
-			m1, _ := bot.Send(msg)
-			previousDeployID = m1.MessageID
-		}
+		// if typeJob == "test" && statusJob == "created" {
+		// 	m1, _ := bot.Send(msg)
+		// 	previousTestID = m1.MessageID
+		// }
+		// if typeJob == "build" && statusJob == "created" {
+		// 	m1, _ := bot.Send(msg)
+		// 	previousBuildID = m1.MessageID
+		// }
+		// if typeJob == "deploy" && statusJob == "created" {
+		// 	m1, _ := bot.Send(msg)
+		// 	previousDeployID = m1.MessageID
+		// }
 	} else if pay.ObjectKind == "pipeline" {
+		log.Println(statusPipeline)
 		if statusPipeline == "pending" {
 			m1, _ := bot.Send(msg)
 			previousPipeline = m1.MessageID
 		} else {
-			msg1 := tgbot.NewEditMessageText(chatId, previousPipeline, dt)
+			msg1 = tgbot.NewEditMessageText(chatId, previousPipeline, dt)
 			bot.Send(msg1)
 		}
 
 	} else {
 		bot.Send(msg)
+		//currentMesID = m1.MessageID
 	}
 	//bot.Send(msg)
 	//return
